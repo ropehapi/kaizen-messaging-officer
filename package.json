@@ -11,6 +11,8 @@
   "license": "ISC",
   "dependencies": {
     "@whiskeysockets/baileys": "^6.7.20",
+    "body-parser": "^2.2.0",
+    "express": "^5.1.0",
     "qrcode-terminal": "^0.12.0"
   },
   "type": "module"
