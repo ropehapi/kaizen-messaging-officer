@@ -1,84 +1,38 @@
 import express from 'express'
 import bodyParser from 'body-parser'
-import makeWASocket, { useMultiFileAuthState, fetchLatestBaileysVersion } from '@whiskeysockets/baileys'
-import qrcode from 'qrcode-terminal'
+import swaggerUi from 'swagger-ui-express'
 import logger from './logger.js'
+import swaggerDocument from './swagger.js'
+import { startWhatsApp } from './socket.js'
+import messageRoutes from './routes/messageRoutes.js'
+import contactRoutes from './routes/contactRoutes.js'
+import groupRoutes from './routes/groupRoutes.js'
+import chatRoutes from './routes/chatRoutes.js'
 
 const app = express()
 const port = 3000
 app.use(bodyParser.json())
 
-let sock
+// Documentação Swagger
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Messaging Officer - API Docs'
+}))
 
-async function startWhatsApp() {
-  try {
-    const { state, saveCreds } = await useMultiFileAuthState('auth')
-    const { version } = await fetchLatestBaileysVersion()
+// Rotas de mensagens: /api/send-message, /api/send-image, /api/send-video, etc.
+app.use('/api', messageRoutes)
 
-    sock = makeWASocket({
-      version,
-      auth: state,
-      printQRInTerminal: false,
-      markOnlineOnConnect: false,
-      browser: ['Safari', 'iOS', '14.8']
-      // browser: ['Ubuntu', 'Chrome', '22.04.4'] # Para Linux
-    })
+// Rotas de contatos/usuários: /api/check-number/:number, /api/profile-picture/:number, etc.
+app.use('/api', contactRoutes)
 
-    sock.ev.on('creds.update', saveCreds)
+// Rotas de grupos: /api/groups, /api/groups/create, /api/groups/:groupId/metadata, etc.
+app.use('/api/groups', groupRoutes)
 
-    sock.ev.on('connection.update', (update) => {
-      const { connection, lastDisconnect, qr } = update
-
-      if (qr) {
-        console.log('📲 Escaneie o QR code no WhatsApp:')
-        qrcode.generate(qr, { small: true })
-      }
-
-      if (connection === 'open') logger.info({ event: 'connected', msg: 'Conectado ao WhatsApp!' })
-
-      if (connection === 'close') {
-        const statusCode = lastDisconnect?.error?.output?.statusCode
-        logger.info({ event: 'connection_closed', statusCode })
-        if (statusCode !== 401) {
-          logger.info({ event: 'reconnecting', msg: 'Tentando reconectar...' })
-          startWhatsApp()
-        } else {
-          logger.error({ event: 'session_invalid', msg: 'Sessão inválida. Delete auth/ e reescaneie o QR code.' })
-        }
-      }
-    })
-  } catch (err) {
-    logger.error({ event: 'startup_error', msg: err.message, stack: err.stack })
-    setTimeout(startWhatsApp, 5000)
-  }
-}
-
-app.post('/send-message', async (req, res) => {
-  try {
-    const { number, message } = req.body
-    if (!number || !message) {
-      logger.error({ event: 'invalid_request', msg: 'Número ou mensagem não fornecidos' })
-      return res.status(400).json({ error: 'number e message são obrigatórios' })
-    }
-
-    const jid = `${number}@s.whatsapp.net`
-    await sock.sendMessage(jid, { text: message })
-
-    logger.info({
-      event: 'message_sent',
-      number,
-      message,
-      timestamp: new Date().toISOString()
-    })
-
-    return res.json({ status: 'success', number, message })
-  } catch (err) {
-    logger.error({ event: 'send_message_error', msg: err.message, stack: err.stack })
-    return res.status(500).json({ status: 'error', error: err.message })
-  }
-})
+// Rotas de chat: /api/connection-status, /api/presence, /api/read-messages, etc.
+app.use('/api', chatRoutes)
 
 app.listen(port, () => {
   logger.info({ event: 'server_start', msg: `API rodando em http://localhost:${port}` })
+  logger.info({ event: 'swagger_docs', msg: `Documentação Swagger disponível em http://localhost:${port}/docs` })
   startWhatsApp()
 })
