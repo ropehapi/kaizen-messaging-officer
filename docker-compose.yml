@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    container_name: messaging-officer
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./auth:/app/auth
+      - ./logs:/app/logs
+    restart: unless-stopped

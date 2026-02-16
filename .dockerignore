@@ -1,0 +1,10 @@
+node_modules/
+auth/
+logs/
+baileys/
+.git/
+.gitignore
+.dockerignore
+README.md
+Dockerfile
+docker-compose.yml

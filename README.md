@@ -34,13 +34,22 @@ messaging-officer/
 │       ├── contactRoutes.js       # Consultas de contatos e perfil
 │       ├── groupRoutes.js         # Operações com grupos
 │       └── chatRoutes.js          # Operações de chat (presença, leitura, etc.)
+├── Dockerfile                     # Imagem Docker da aplicação
+├── docker-compose.yml             # Orquestração com Docker Compose
+├── .dockerignore                  # Arquivos ignorados no build Docker
 ├── package.json
 └── README.md
 ```
 
 ---
 
-## Instalação
+## Pré-requisitos
+
+- [Docker](https://docs.docker.com/get-docker/) e [Docker Compose](https://docs.docker.com/compose/install/) instalados
+
+---
+
+## Rodando com Docker (recomendado)
 
 1. Clone o repositório:
 
@@ -49,18 +58,52 @@ git clone <repositório>
 cd messaging-officer
 ```
 
-2. Instale dependências:
+2. Suba a aplicação:
 
 ```bash
-npm install
+docker compose up -d
+```
+
+3. Acompanhe os logs para escanear o QR code:
+
+```bash
+docker compose logs -f
+```
+
+4. Escaneie o QR code com o WhatsApp (em *Aparelhos conectados*).
+
+5. A sessão será salva em `auth/` (volume persistente) para evitar reescaneamentos futuros.
+
+Para parar a aplicação:
+
+```bash
+docker compose down
+```
+
+Para reconstruir após alterações no código:
+
+```bash
+docker compose up -d --build
 ```
 
 ---
 
-## Rodando a aplicação
+## Rodando sem Docker
+
+1. Certifique-se de ter o **Node.js 22+** instalado.
+
+2. Clone o repositório e instale as dependências:
 
 ```bash
-node src/index.js
+git clone <repositório>
+cd messaging-officer
+npm install
+```
+
+3. Inicie a aplicação:
+
+```bash
+npm start
 ```
 
 - O terminal exibirá um **QR code**.  
