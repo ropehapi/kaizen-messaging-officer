@@ -8,14 +8,152 @@ const router = Router()
 // Status da conexão (não precisa de conexão ativa)
 router.get('/connection-status', (req, res) => {
   const status = getConnectionStatus()
-  const qr = getQrCode()
+  const qrDataUrl = getQrCode()
 
   return res.json({
     status: 'success',
     connection: status,
-    hasQrCode: !!qr,
-    qrCode: qr || null
+    hasQrCode: !!qrDataUrl,
+    qrCode: qrDataUrl || null
   })
+})
+
+// Página HTML para escanear o QR code via browser (não precisa de conexão ativa)
+router.get('/qr', (req, res) => {
+  const status = getConnectionStatus()
+  const qrDataUrl = getQrCode()
+
+  const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messaging Officer — QR Code</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0b141a;
+      color: #e9edef;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .card {
+      background: #1f2c34;
+      border-radius: 16px;
+      padding: 40px;
+      text-align: center;
+      max-width: 420px;
+      width: 90%;
+      box-shadow: 0 8px 32px rgba(0,0,0,.3);
+    }
+    .card h1 {
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+      color: #00a884;
+    }
+    .card p {
+      font-size: 0.9rem;
+      color: #8696a0;
+      margin-bottom: 24px;
+    }
+    .qr-container {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      display: inline-block;
+      margin-bottom: 24px;
+    }
+    .qr-container img {
+      display: block;
+      width: 264px;
+      height: 264px;
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+    .status.connected { background: #00a88422; color: #00a884; }
+    .status.qr { background: #f7c94822; color: #f7c948; }
+    .status.disconnected { background: #ea434322; color: #ea4343; }
+    .status.error { background: #ea434322; color: #ea4343; }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot.connected { background: #00a884; }
+    .dot.qr { background: #f7c948; animation: pulse 1.5s infinite; }
+    .dot.disconnected { background: #ea4343; }
+    .dot.error { background: #ea4343; }
+    .connected-msg {
+      font-size: 3rem;
+      margin-bottom: 16px;
+    }
+    .hint {
+      font-size: 0.8rem;
+      color: #8696a0;
+      margin-top: 16px;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .4; }
+    }
+  </style>
+  ${status === 'qr' ? '<meta http-equiv="refresh" content="30">' : ''}
+  ${status === 'disconnected' || status === 'error' ? '<meta http-equiv="refresh" content="5">' : ''}
+</head>
+<body>
+  <div class="card">
+    <h1>Messaging Officer</h1>
+    <p>WhatsApp Web — Autenticação</p>
+
+    ${status === 'qr' && qrDataUrl ? `
+      <div class="qr-container">
+        <img src="${qrDataUrl}" alt="QR Code WhatsApp" />
+      </div>
+      <p>Abra o WhatsApp no celular → Menu → Dispositivos conectados → Conectar dispositivo</p>
+    ` : ''}
+
+    ${status === 'connected' ? `
+      <div class="connected-msg">✅</div>
+      <p>WhatsApp conectado com sucesso!</p>
+    ` : ''}
+
+    ${status === 'disconnected' ? `
+      <div class="connected-msg">⏳</div>
+      <p>Aguardando conexão... Esta página atualiza automaticamente.</p>
+    ` : ''}
+
+    ${status === 'error' ? `
+      <div class="connected-msg">❌</div>
+      <p>Erro na conexão. Verifique os logs da aplicação.</p>
+    ` : ''}
+
+    <div>
+      <span class="status ${status}">
+        <span class="dot ${status}"></span>
+        ${status === 'connected' ? 'Conectado' : ''}
+        ${status === 'qr' ? 'Aguardando escaneamento' : ''}
+        ${status === 'disconnected' ? 'Desconectado' : ''}
+        ${status === 'error' ? 'Erro' : ''}
+      </span>
+    </div>
+
+    <p class="hint">Página atualiza automaticamente</p>
+  </div>
+</body>
+</html>`
+
+  res.setHeader('Content-Type', 'text/html')
+  return res.send(html)
 })
 
 // Endpoints abaixo requerem conexão ativa

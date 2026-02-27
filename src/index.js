@@ -19,6 +19,9 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
   customSiteTitle: 'Messaging Officer - API Docs'
 }))
 
+// Rotas de chat (PRIMEIRO — inclui /connection-status e /qr que não exigem conexão ativa)
+app.use('/api', chatRoutes)
+
 // Rotas de mensagens: /api/send-message, /api/send-image, /api/send-video, etc.
 app.use('/api', messageRoutes)
 
@@ -27,9 +30,6 @@ app.use('/api', contactRoutes)
 
 // Rotas de grupos: /api/groups, /api/groups/create, /api/groups/:groupId/metadata, etc.
 app.use('/api/groups', groupRoutes)
-
-// Rotas de chat: /api/connection-status, /api/presence, /api/read-messages, etc.
-app.use('/api', chatRoutes)
 
 app.listen(port, () => {
   logger.info({ event: 'server_start', msg: `API rodando em http://localhost:${port}` })

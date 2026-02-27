@@ -1,10 +1,11 @@
 import makeWASocket, { useMultiFileAuthState, fetchLatestBaileysVersion } from '@whiskeysockets/baileys'
-import qrcode from 'qrcode-terminal'
+import qrcodeTerminal from 'qrcode-terminal'
+import QRCode from 'qrcode'
 import logger from './logger.js'
 
 let sock = null
 let connectionStatus = 'disconnected'
-let qrCode = null
+let qrCodeDataUrl = null
 
 async function startWhatsApp() {
   try {
@@ -21,19 +22,24 @@ async function startWhatsApp() {
 
     sock.ev.on('creds.update', saveCreds)
 
-    sock.ev.on('connection.update', (update) => {
+    sock.ev.on('connection.update', async (update) => {
       const { connection, lastDisconnect, qr } = update
 
       if (qr) {
-        qrCode = qr
+        try {
+          qrCodeDataUrl = await QRCode.toDataURL(qr, { width: 300, margin: 2 })
+        } catch (err) {
+          logger.error({ event: 'qr_generation_error', msg: err.message })
+          qrCodeDataUrl = null
+        }
         connectionStatus = 'qr'
-        console.log('📲 Escaneie o QR code no WhatsApp:')
-        qrcode.generate(qr, { small: true })
+        logger.info({ event: 'qr_generated', msg: 'QR code gerado. Escaneie via /api/qr ou /api/connection-status' })
+        qrcodeTerminal.generate(qr, { small: true })
       }
 
       if (connection === 'open') {
         connectionStatus = 'connected'
-        qrCode = null
+        qrCodeDataUrl = null
         logger.info({ event: 'connected', msg: 'Conectado ao WhatsApp!' })
       }
 
@@ -65,7 +71,7 @@ function getConnectionStatus() {
 }
 
 function getQrCode() {
-  return qrCode
+  return qrCodeDataUrl
 }
 
 export { startWhatsApp, getSock, getConnectionStatus, getQrCode }
