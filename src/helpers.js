@@ -1,4 +1,5 @@
 import { getSession } from './socket.js'
+import logger from './logger.js'
 
 /**
  * Formata um número de telefone para o JID do WhatsApp.
@@ -18,6 +19,50 @@ export function formatGroupJid(groupId) {
   if (!groupId) return null
   if (groupId.endsWith('@g.us')) return groupId
   return `${groupId}@g.us`
+}
+
+/**
+ * Middleware de autenticação via API Key.
+ *
+ * - Se a variável de ambiente API_KEY não estiver definida, a autenticação
+ *   é desabilitada (modo desenvolvimento) e todas as requisições passam.
+ * - Rotas de páginas HTML para QR code (/sessions/:id/qr) são isentas,
+ *   pois são acessadas diretamente pelo browser.
+ * - Todas as demais rotas /api exigem o header x-api-key com o valor correto.
+ */
+export function requireApiKey(req, res, next) {
+  const API_KEY = process.env.API_KEY
+
+  // Se API_KEY não está configurada, autenticação desabilitada (modo dev)
+  if (!API_KEY) {
+    return next()
+  }
+
+  // Rotas de QR code via browser são isentas (GET /sessions/:id/qr)
+  const isQrPage = req.method === 'GET' && /^\/sessions\/[^/]+\/qr$/.test(req.path)
+  if (isQrPage) {
+    return next()
+  }
+
+  const providedKey = req.headers['x-api-key']
+
+  if (!providedKey) {
+    logger.warn({ event: 'auth_missing_key', ip: req.ip, path: req.originalUrl })
+    return res.status(401).json({
+      status: 'error',
+      error: 'Header x-api-key é obrigatório'
+    })
+  }
+
+  if (providedKey !== API_KEY) {
+    logger.warn({ event: 'auth_invalid_key', ip: req.ip, path: req.originalUrl })
+    return res.status(401).json({
+      status: 'error',
+      error: 'API key inválida'
+    })
+  }
+
+  next()
 }
 
 /**

@@ -16,6 +16,7 @@ Permite enviar mensagens de texto, mídias, gerenciar grupos, consultar contatos
 - **qrcode** → Geração de QR code como base64 (data URL) para renderização via browser
 - **qrcode-terminal** → Exibe QR code no terminal (fallback)
 - **Winston** → Logging estruturado em JSON
+- **dotenv** → Carregamento automático de variáveis de ambiente (`.env`)
 
 ---
 
@@ -46,6 +47,8 @@ messaging-officer/
 │       └── chatRoutes.js              # Operações de chat (presença, leitura, etc.)
 ├── Dockerfile
 ├── docker-compose.yml
+├── .env.example                       # Exemplo de variáveis de ambiente
+├── .env                               # Variáveis de ambiente (não versionado)
 ├── package.json
 └── README.md
 ```
@@ -60,6 +63,30 @@ messaging-officer/
 
 ---
 
+## Configuração
+
+A aplicação utiliza variáveis de ambiente para configuração. Um arquivo `.env.example` é fornecido como referência.
+
+### 1. Copie o arquivo de exemplo
+
+```bash
+cp .env.example .env
+```
+
+### 2. Configure as variáveis
+
+Edite o arquivo `.env` com os valores desejados:
+
+| Variável   | Descrição                                      | Obrigatória | Padrão |
+|------------|-------------------------------------------------|:-----------:|--------|
+| `API_KEY`  | Chave de autenticação da API (header `x-api-key`) | Não¹       | —      |
+
+> ¹ Se `API_KEY` não estiver definida, a autenticação é desabilitada (modo desenvolvimento). **Em produção, sempre defina uma chave forte.**
+
+⚠️ **O arquivo `.env` contém dados sensíveis e já está incluído no `.gitignore`. Nunca o versione.**
+
+---
+
 ## Rodando com Docker (recomendado)
 
 ```bash
@@ -67,16 +94,20 @@ messaging-officer/
 git clone <repositório>
 cd messaging-officer
 
-# 2. Suba a aplicação
+# 2. Configure as variáveis de ambiente
+cp .env.example .env
+# Edite o .env com sua API_KEY
+
+# 3. Suba a aplicação
 docker compose up -d
 
-# 3. Acompanhe os logs
+# 4. Acompanhe os logs
 docker compose logs -f
 
-# 4. Pare a aplicação
+# 5. Pare a aplicação
 docker compose down
 
-# 5. Reconstrua após alterações
+# 6. Reconstrua após alterações
 docker compose up -d --build
 ```
 
@@ -88,9 +119,15 @@ docker compose up -d --build
 # 1. Instale as dependências
 npm install
 
-# 2. Inicie a aplicação
+# 2. Configure as variáveis de ambiente
+cp .env.example .env
+# Edite o .env com sua API_KEY
+
+# 3. Inicie a aplicação
 npm start
 ```
+
+> **Nota:** A aplicação usa `dotenv` para carregar automaticamente o arquivo `.env` tanto via Docker quanto via `npm start`.
 
 ---
 
@@ -101,6 +138,23 @@ Após iniciar a aplicação, a documentação interativa estará disponível em:
 ```
 http://localhost:3000/docs
 ```
+
+---
+
+## Autenticação
+
+Todas as rotas `/api` são protegidas por uma **API Key** via header `x-api-key`.
+
+- Configure a chave no arquivo `.env` (variável `API_KEY`)
+- Se `API_KEY` não estiver definida, a autenticação é desabilitada (modo desenvolvimento)
+- A página HTML do QR code (`GET /api/sessions/:id/qr`) e a documentação Swagger (`/docs`) são públicas
+
+```bash
+# Exemplo de chamada autenticada
+curl -H "x-api-key: SUA_API_KEY" http://localhost:3000/api/sessions
+```
+
+> Para detalhes completos sobre autenticação, veja [docs/USAGE.md](./docs/USAGE.md#0-autenticação-api-key).
 
 ---
 

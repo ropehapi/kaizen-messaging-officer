@@ -4,6 +4,8 @@ services:
     container_name: messaging-officer
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     volumes:
       - ./auth:/app/auth
       - ./logs:/app/logs

@@ -5,27 +5,22 @@
 
 ---
 
-## 🔴 1. Autenticação na API (Crítica)
+## ~~🔴 1. Autenticação na API (Crítica)~~ ✅ Resolvido
 
-**Status:** Não implementado  
+**Status:** Implementado  
 **Impacto:** Segurança
 
-A API é completamente aberta. Qualquer pessoa que consiga acessar a porta da aplicação pode enviar mensagens do WhatsApp autenticado.
+Middleware `requireApiKey` aplicado globalmente em todas as rotas `/api` via header `x-api-key`.
 
-**Solução mínima:** Implementar middleware de API Key via header `x-api-key`:
+**Comportamento:**
+- `API_KEY` configurada via arquivo `.env` (veja `.env.example`)
+- Se `API_KEY` não estiver definida → autenticação desabilitada (modo dev)
+- Páginas HTML de QR code (`GET /api/sessions/:id/qr`) são isentas (acesso via browser)
+- Documentação Swagger (`/docs`) é pública
+- Todas as demais rotas retornam `401` sem header `x-api-key` válido
+- `.env` incluído no `.gitignore` para segurança
 
-```javascript
-app.use('/api', (req, res, next) => {
-  if (req.path === '/connection-status') return next() // público
-  const apiKey = req.headers['x-api-key']
-  if (apiKey !== process.env.API_KEY) {
-    return res.status(401).json({ error: 'API key inválida' })
-  }
-  next()
-})
-```
-
-**Variável de ambiente necessária:** `API_KEY`
+**Arquivos alterados:** `src/helpers.js`, `src/index.js`, `docker-compose.yml`, `src/swagger.js`, `.env.example`, `.gitignore`
 
 ---
 
@@ -363,7 +358,7 @@ rm -rf baileys/
 
 | # | Melhoria | Prioridade | Complexidade |
 |---|---|---|---|
-| 1 | Autenticação API (API Key) | 🔴 Crítica | Baixa |
+| 1 | ~~Autenticação API (API Key)~~ ✅ | ~~🔴 Crítica~~ | ~~Baixa~~ |
 | 2 | Fix port mismatch Docker | 🔴 Crítica | Trivial |
 | 3 | QR Code como base64/imagem | 🟠 Alta | Baixa |
 | 4 | Endpoints logout/restart | 🟠 Alta | Baixa |

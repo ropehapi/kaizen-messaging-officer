@@ -2,7 +2,7 @@ const swaggerDocument = {
   openapi: '3.0.3',
   info: {
     title: 'Messaging Officer - WhatsApp API',
-    description: 'API REST para interagir com o WhatsApp via Baileys com suporte a **múltiplas sessões**.\n\nTodas as rotas operacionais (mensagens, contatos, grupos, chat) exigem o header `X-Session-Id` para identificar qual sessão WhatsApp utilizar.\n\n**Fluxo básico:**\n1. Crie uma sessão via `POST /api/sessions`\n2. Escaneie o QR code em `/api/sessions/{sessionId}/qr`\n3. Use os endpoints passando o header `X-Session-Id`',
+    description: 'API REST para interagir com o WhatsApp via Baileys com suporte a **múltiplas sessões**.\n\n## Autenticação\n\nTodas as rotas `/api` exigem o header `x-api-key` com a chave configurada na variável de ambiente `API_KEY`.\n\n> Se `API_KEY` não estiver definida, a autenticação é desabilitada (modo desenvolvimento).\n\n> Páginas HTML de QR code (`/api/sessions/{sessionId}/qr`) são públicas.\n\n## Sessões\n\nTodas as rotas operacionais (mensagens, contatos, grupos, chat) exigem o header `X-Session-Id` para identificar qual sessão WhatsApp utilizar.\n\n**Fluxo básico:**\n1. Crie uma sessão via `POST /api/sessions`\n2. Escaneie o QR code em `/api/sessions/{sessionId}/qr`\n3. Use os endpoints passando os headers `x-api-key` e `X-Session-Id`',
     version: '2.0.0',
     license: {
       name: 'ISC'
@@ -147,7 +147,8 @@ const swaggerDocument = {
       get: {
         tags: ['Sessões'],
         summary: 'Página HTML do QR code',
-        description: 'Retorna uma página HTML com o QR code para escaneamento via browser. Atualiza automaticamente.',
+        description: 'Retorna uma página HTML com o QR code para escaneamento via browser. Atualiza automaticamente.\n\n**Este endpoint é público** — não exige `x-api-key` pois é acessado diretamente pelo navegador.',
+        security: [],
         parameters: [
           { $ref: '#/components/parameters/SessionIdPath' }
         ],
@@ -1393,7 +1394,18 @@ const swaggerDocument = {
       }
     }
   },
+  security: [
+    { ApiKeyAuth: [] }
+  ],
   components: {
+    securitySchemes: {
+      ApiKeyAuth: {
+        type: 'apiKey',
+        in: 'header',
+        name: 'x-api-key',
+        description: 'Chave de API configurada na variável de ambiente API_KEY. Se API_KEY não estiver definida, a autenticação é desabilitada.'
+      }
+    },
     parameters: {
       XSessionId: {
         name: 'X-Session-Id',
@@ -1424,6 +1436,13 @@ const swaggerDocument = {
         properties: {
           status: { type: 'string', example: 'error' },
           error: { type: 'string', example: 'Header X-Session-Id é obrigatório' }
+        }
+      },
+      Error401: {
+        type: 'object',
+        properties: {
+          status: { type: 'string', example: 'error' },
+          error: { type: 'string', example: 'API key inválida' }
         }
       },
       Error404Session: {

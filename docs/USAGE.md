@@ -8,9 +8,71 @@ Este documento explica como gerenciar sessões e consumir a API do Messaging Off
 
 ## Conceitos
 
+- **API Key (`x-api-key`)**: Todas as rotas `/api` exigem autenticação via header `x-api-key`. Se a variável de ambiente `API_KEY` não estiver configurada, a autenticação é desabilitada (modo desenvolvimento).
 - **Sessão**: Representa uma conexão WhatsApp ativa. Cada sessão tem um `sessionId` (ex: `"pedro"`, `"bot-vendas"`), um socket Baileys independente e seu próprio QR code.
 - **Header `X-Session-Id`**: Todas as rotas operacionais (enviar mensagem, consultar contato, etc.) exigem esse header para identificar qual sessão WhatsApp usar.
-- **Rotas de sessão** (`/api/sessions`): Gerenciamento de sessões (criar, listar, deletar). **Não** exigem o header.
+- **Rotas de sessão** (`/api/sessions`): Gerenciamento de sessões (criar, listar, deletar). **Não** exigem o header `X-Session-Id`, mas **exigem** `x-api-key`.
+
+---
+
+## 0. Autenticação (API Key)
+
+A API é protegida por uma chave de autenticação via header `x-api-key`.
+
+### Configuração
+
+A API Key é configurada via variável de ambiente `API_KEY`, preferencialmente através do arquivo `.env` na raiz do projeto.
+
+**1. Copie o arquivo de exemplo:**
+
+```bash
+cp .env.example .env
+```
+
+**2. Edite o `.env` e defina sua chave:**
+
+```env
+API_KEY=minha-chave-secreta-aqui
+```
+
+**3. Inicie a aplicação normalmente:**
+
+```bash
+# Com Docker (recomendado)
+docker compose up -d
+
+# Sem Docker
+npm start
+```
+
+> O `.env` é carregado automaticamente pelo `dotenv` em ambos os casos.
+
+> **Modo desenvolvimento:** Se `API_KEY` não estiver definida no `.env` (ou o valor estiver vazio), a autenticação é desabilitada e todas as requisições são aceitas.
+>
+> ⚠️ **Em produção, sempre defina uma chave forte.** O arquivo `.env` já está no `.gitignore` e nunca deve ser versionado.
+
+### Uso
+
+Adicione o header `x-api-key` em **todas** as requisições à API:
+
+```bash
+curl -H "x-api-key: minha-chave-secreta-aqui" \
+  http://localhost:3000/api/sessions
+```
+
+### Rotas públicas (sem autenticação)
+
+| Rota | Descrição |
+|------|-----------|
+| `GET /docs` | Documentação Swagger |
+| `GET /api/sessions/{sessionId}/qr` | Página HTML do QR code (acesso via browser) |
+
+### Erros de autenticação
+
+| Código | Resposta | Causa |
+|--------|----------|-------|
+| `401` | `Header x-api-key é obrigatório` | Header ausente |
+| `401` | `API key inválida` | Valor do header não corresponde ao `API_KEY` |
 
 ---
 
@@ -21,6 +83,7 @@ Para começar a usar a API, primeiro crie uma sessão:
 ```bash
 curl -X POST http://localhost:3000/api/sessions \
   -H "Content-Type: application/json" \
+  -H "x-api-key: minha-chave-secreta-aqui" \
   -d '{ "sessionId": "pedro" }'
 ```
 
@@ -69,6 +132,7 @@ Após a sessão estar conectada, use os endpoints normalmente adicionando o head
 ```bash
 curl -X POST http://localhost:3000/api/send-message \
   -H "Content-Type: application/json" \
+  -H "x-api-key: minha-chave-secreta-aqui" \
   -H "X-Session-Id: pedro" \
   -d '{
     "number": "5511999999999",
@@ -84,11 +148,13 @@ Você pode conectar vários números WhatsApp ao mesmo tempo:
 # Criar sessão do Pedro
 curl -X POST http://localhost:3000/api/sessions \
   -H "Content-Type: application/json" \
+  -H "x-api-key: minha-chave-secreta-aqui" \
   -d '{ "sessionId": "pedro" }'
 
 # Criar sessão da Maria (sem reiniciar a aplicação)
 curl -X POST http://localhost:3000/api/sessions \
   -H "Content-Type: application/json" \
+  -H "x-api-key: minha-chave-secreta-aqui" \
   -d '{ "sessionId": "maria" }'
 ```
 
@@ -105,12 +171,14 @@ Depois, envie mensagens pela sessão desejada trocando o header:
 # Pedro envia
 curl -X POST http://localhost:3000/api/send-message \
   -H "Content-Type: application/json" \
+  -H "x-api-key: minha-chave-secreta-aqui" \
   -H "X-Session-Id: pedro" \
   -d '{ "number": "5511999999999", "message": "Oi, sou o Pedro!" }'
 
 # Maria envia
 curl -X POST http://localhost:3000/api/send-message \
   -H "Content-Type: application/json" \
+  -H "x-api-key: minha-chave-secreta-aqui" \
   -H "X-Session-Id: maria" \
   -d '{ "number": "5511999999999", "message": "Oi, sou a Maria!" }'
 ```
@@ -122,7 +190,8 @@ curl -X POST http://localhost:3000/api/send-message \
 ### Listar todas as sessões
 
 ```bash
-curl http://localhost:3000/api/sessions
+curl -H "x-api-key: minha-chave-secreta-aqui" \
+  http://localhost:3000/api/sessions
 ```
 
 ```json
@@ -138,7 +207,8 @@ curl http://localhost:3000/api/sessions
 ### Ver status de uma sessão
 
 ```bash
-curl http://localhost:3000/api/sessions/pedro/status
+curl -H "x-api-key: minha-chave-secreta-aqui" \
+  http://localhost:3000/api/sessions/pedro/status
 ```
 
 ```json
@@ -155,7 +225,8 @@ curl http://localhost:3000/api/sessions/pedro/status
 Reconecta mantendo as credenciais (sem precisar escanear QR novamente):
 
 ```bash
-curl -X POST http://localhost:3000/api/sessions/pedro/restart
+curl -X POST http://localhost:3000/api/sessions/pedro/restart \
+  -H "x-api-key: minha-chave-secreta-aqui"
 ```
 
 ### Deletar sessão
@@ -163,7 +234,8 @@ curl -X POST http://localhost:3000/api/sessions/pedro/restart
 Desconecta e **remove** as credenciais salvas. Será necessário escanear QR novamente se recriada:
 
 ```bash
-curl -X DELETE http://localhost:3000/api/sessions/pedro
+curl -X DELETE http://localhost:3000/api/sessions/pedro \
+  -H "x-api-key: minha-chave-secreta-aqui"
 ```
 
 ---
@@ -208,7 +280,9 @@ Os números devem ser enviados no formato internacional **sem** o `+`:
 
 | Código | Erro | Causa |
 |--------|------|-------|
-| `400` | `Header X-Session-Id é obrigatório` | Esqueceu o header na chamada |
+| `401` | `Header x-api-key é obrigatório` | Esqueceu o header de autenticação |
+| `401` | `API key inválida` | Valor do `x-api-key` não corresponde ao `API_KEY` configurado |
+| `400` | `Header X-Session-Id é obrigatório` | Esqueceu o header de sessão na chamada |
 | `400` | `sessionId é obrigatório` | Não enviou o body ao criar sessão |
 | `404` | `Sessão "xxx" não encontrada` | Sessão não foi criada via POST /api/sessions |
 | `503` | `WhatsApp não está conectado` | Sessão existe mas QR ainda não foi escaneado |
@@ -217,10 +291,14 @@ Os números devem ser enviados no formato internacional **sem** o `+`:
 
 ## 12. Usando com Postman
 
-1. Importe o arquivo `messaging-officer-openapi.json` no Postman
-2. Na collection, vá em **Variables** e configure a URL base (`http://localhost:3000`)
-3. Para cada request, adicione o header:
-   - **Key**: `X-Session-Id`
-   - **Value**: o ID da sua sessão (ex: `pedro`)
+1. Importe o arquivo `messaging-officer-postman.json` no Postman
+2. Na collection, vá em **Variables** e configure:
+   - `baseUrl` → `http://localhost:3000`
+   - `sessionId` → o ID da sua sessão (ex: `pedro`)
+3. Na aba **Authorization** da collection, configure:
+   - **Type**: `API Key`
+   - **Key**: `x-api-key`
+   - **Value**: sua chave de API
+   - **Add to**: `Header`
 
-> **Dica**: Configure o header `X-Session-Id` na aba **Headers** da collection inteira para não precisar adicionar em cada request individual.
+> **Dica**: Configurando na collection inteira, o Postman adiciona automaticamente os headers `x-api-key` e `X-Session-Id` em cada request individual.
