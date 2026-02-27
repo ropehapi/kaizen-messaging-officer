@@ -2,8 +2,8 @@ const swaggerDocument = {
   openapi: '3.0.3',
   info: {
     title: 'Messaging Officer - WhatsApp API',
-    description: 'API REST para interagir com o WhatsApp via Baileys. Permite enviar mensagens, gerenciar grupos, consultar contatos e mais.',
-    version: '1.0.0',
+    description: 'API REST para interagir com o WhatsApp via Baileys com suporte a **múltiplas sessões**.\n\nTodas as rotas operacionais (mensagens, contatos, grupos, chat) exigem o header `X-Session-Id` para identificar qual sessão WhatsApp utilizar.\n\n**Fluxo básico:**\n1. Crie uma sessão via `POST /api/sessions`\n2. Escaneie o QR code em `/api/sessions/{sessionId}/qr`\n3. Use os endpoints passando o header `X-Session-Id`',
+    version: '2.0.0',
     license: {
       name: 'ISC'
     }
@@ -15,37 +15,211 @@ const swaggerDocument = {
     }
   ],
   tags: [
-    { name: 'Conexão', description: 'Status da conexão com o WhatsApp' },
-    { name: 'Mensagens', description: 'Envio e gerenciamento de mensagens' },
-    { name: 'Contatos', description: 'Consultas e operações com contatos/usuários' },
-    { name: 'Perfil', description: 'Gerenciamento do perfil próprio' },
-    { name: 'Grupos', description: 'Operações com grupos do WhatsApp' },
-    { name: 'Chat', description: 'Operações de chat (presença, leitura, arquivar, etc.)' }
+    { name: 'Sessões', description: 'Gerenciamento de sessões WhatsApp (criar, listar, QR, deletar, reiniciar)' },
+    { name: 'Mensagens', description: 'Envio e gerenciamento de mensagens (requer X-Session-Id)' },
+    { name: 'Contatos', description: 'Consultas e operações com contatos/usuários (requer X-Session-Id)' },
+    { name: 'Perfil', description: 'Gerenciamento do perfil próprio (requer X-Session-Id)' },
+    { name: 'Grupos', description: 'Operações com grupos do WhatsApp (requer X-Session-Id)' },
+    { name: 'Chat', description: 'Operações de chat — presença, leitura, arquivar, etc. (requer X-Session-Id)' }
   ],
   paths: {
-    // ===================== CONEXÃO =====================
-    '/api/connection-status': {
-      get: {
-        tags: ['Conexão'],
-        summary: 'Status da conexão',
-        description: 'Retorna o status atual da conexão com o WhatsApp e o QR code, se disponível.',
+    // ===================== SESSÕES =====================
+    '/api/sessions': {
+      post: {
+        tags: ['Sessões'],
+        summary: 'Criar nova sessão',
+        description: 'Cria uma nova sessão WhatsApp. Após criar, escaneie o QR code na URL retornada.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['sessionId'],
+                properties: {
+                  sessionId: { type: 'string', description: 'Identificador único da sessão (letras, números, hífens e underscores)', example: 'pedro' }
+                }
+              }
+            }
+          }
+        },
         responses: {
-          200: {
-            description: 'Status retornado com sucesso',
+          201: {
+            description: 'Sessão criada com sucesso',
             content: {
               'application/json': {
                 schema: {
                   type: 'object',
                   properties: {
                     status: { type: 'string', example: 'success' },
-                    connection: { type: 'string', enum: ['connected', 'disconnected', 'qr', 'error'], example: 'connected' },
-                    hasQrCode: { type: 'boolean', example: false },
-                    qrCode: { type: 'string', nullable: true, example: null }
+                    sessionId: { type: 'string', example: 'pedro' },
+                    message: { type: 'string', example: 'Sessão criada. Escaneie o QR em /api/sessions/pedro/qr' },
+                    qrUrl: { type: 'string', example: '/api/sessions/pedro/qr' }
+                  }
+                }
+              }
+            }
+          },
+          200: {
+            description: 'Sessão já está conectada',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    sessionId: { type: 'string', example: 'pedro' },
+                    message: { type: 'string', example: 'Sessão já está conectada' },
+                    connectionStatus: { type: 'string', example: 'connected' }
+                  }
+                }
+              }
+            }
+          },
+          400: {
+            description: 'sessionId inválido ou ausente',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } }
+          },
+          500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } }
+        }
+      },
+      get: {
+        tags: ['Sessões'],
+        summary: 'Listar todas as sessões',
+        description: 'Retorna todas as sessões ativas com seus respectivos status.',
+        responses: {
+          200: {
+            description: 'Lista de sessões',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    sessions: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          id: { type: 'string', example: 'pedro' },
+                          status: { type: 'string', enum: ['connected', 'disconnected', 'qr', 'error'], example: 'connected' }
+                        }
+                      }
+                    }
                   }
                 }
               }
             }
           }
+        }
+      }
+    },
+    '/api/sessions/{sessionId}/status': {
+      get: {
+        tags: ['Sessões'],
+        summary: 'Status de uma sessão',
+        description: 'Retorna o status de conexão e se há QR code disponível para uma sessão específica.',
+        parameters: [
+          { $ref: '#/components/parameters/SessionIdPath' }
+        ],
+        responses: {
+          200: {
+            description: 'Status retornado',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    sessionId: { type: 'string', example: 'pedro' },
+                    connection: { type: 'string', enum: ['connected', 'disconnected', 'qr', 'error'], example: 'connected' },
+                    hasQrCode: { type: 'boolean', example: false }
+                  }
+                }
+              }
+            }
+          },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } }
+        }
+      }
+    },
+    '/api/sessions/{sessionId}/qr': {
+      get: {
+        tags: ['Sessões'],
+        summary: 'Página HTML do QR code',
+        description: 'Retorna uma página HTML com o QR code para escaneamento via browser. Atualiza automaticamente.',
+        parameters: [
+          { $ref: '#/components/parameters/SessionIdPath' }
+        ],
+        responses: {
+          200: {
+            description: 'Página HTML com QR code',
+            content: {
+              'text/html': {
+                schema: { type: 'string' }
+              }
+            }
+          },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } }
+        }
+      }
+    },
+    '/api/sessions/{sessionId}/restart': {
+      post: {
+        tags: ['Sessões'],
+        summary: 'Reiniciar sessão',
+        description: 'Fecha a conexão atual e reconecta. Se as credenciais ainda forem válidas, reconecta sem novo QR.',
+        parameters: [
+          { $ref: '#/components/parameters/SessionIdPath' }
+        ],
+        responses: {
+          200: {
+            description: 'Sessão reiniciada',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    sessionId: { type: 'string', example: 'pedro' },
+                    message: { type: 'string', example: 'Sessão reiniciada. Aguarde reconexão ou escaneie novo QR.' },
+                    qrUrl: { type: 'string', example: '/api/sessions/pedro/qr' }
+                  }
+                }
+              }
+            }
+          },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
+          500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } }
+        }
+      }
+    },
+    '/api/sessions/{sessionId}': {
+      delete: {
+        tags: ['Sessões'],
+        summary: 'Deletar sessão',
+        description: 'Desconecta a sessão do WhatsApp e remove os arquivos de credenciais permanentemente.',
+        parameters: [
+          { $ref: '#/components/parameters/SessionIdPath' }
+        ],
+        responses: {
+          200: {
+            description: 'Sessão deletada',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    sessionId: { type: 'string', example: 'pedro' },
+                    message: { type: 'string', example: 'Sessão desconectada e removida' }
+                  }
+                }
+              }
+            }
+          },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
+          500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } }
         }
       }
     },
@@ -55,6 +229,7 @@ const swaggerDocument = {
       post: {
         tags: ['Mensagens'],
         summary: 'Enviar mensagem de texto',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -72,7 +247,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Mensagem enviada com sucesso', content: { 'application/json': { schema: { $ref: '#/components/schemas/MessageSuccess' } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -82,6 +258,7 @@ const swaggerDocument = {
       post: {
         tags: ['Mensagens'],
         summary: 'Enviar imagem',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -100,7 +277,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Imagem enviada com sucesso', content: { 'application/json': { schema: { $ref: '#/components/schemas/MessageSuccess' } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -110,6 +288,7 @@ const swaggerDocument = {
       post: {
         tags: ['Mensagens'],
         summary: 'Enviar vídeo',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -128,7 +307,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Vídeo enviado com sucesso', content: { 'application/json': { schema: { $ref: '#/components/schemas/MessageSuccess' } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -138,6 +318,7 @@ const swaggerDocument = {
       post: {
         tags: ['Mensagens'],
         summary: 'Enviar áudio',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -156,7 +337,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Áudio enviado com sucesso', content: { 'application/json': { schema: { $ref: '#/components/schemas/MessageSuccess' } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -166,6 +348,7 @@ const swaggerDocument = {
       post: {
         tags: ['Mensagens'],
         summary: 'Enviar documento',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -185,7 +368,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Documento enviado com sucesso', content: { 'application/json': { schema: { $ref: '#/components/schemas/MessageSuccess' } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -195,6 +379,7 @@ const swaggerDocument = {
       post: {
         tags: ['Mensagens'],
         summary: 'Enviar localização',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -213,7 +398,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Localização enviada com sucesso', content: { 'application/json': { schema: { $ref: '#/components/schemas/MessageSuccess' } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -223,6 +409,7 @@ const swaggerDocument = {
       post: {
         tags: ['Mensagens'],
         summary: 'Enviar contato (vCard)',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -241,7 +428,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Contato enviado com sucesso', content: { 'application/json': { schema: { $ref: '#/components/schemas/MessageSuccess' } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -252,6 +440,7 @@ const swaggerDocument = {
         tags: ['Mensagens'],
         summary: 'Enviar reação a uma mensagem',
         description: 'Envia uma reação (emoji) a uma mensagem existente. Envie reaction vazio para remover a reação.',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -270,7 +459,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Reação enviada com sucesso', content: { 'application/json': { schema: { $ref: '#/components/schemas/MessageSuccess' } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -280,6 +470,7 @@ const swaggerDocument = {
       post: {
         tags: ['Mensagens'],
         summary: 'Enviar enquete (poll)',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -299,7 +490,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Enquete enviada com sucesso', content: { 'application/json': { schema: { $ref: '#/components/schemas/MessageSuccess' } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -309,6 +501,7 @@ const swaggerDocument = {
       post: {
         tags: ['Mensagens'],
         summary: 'Deletar mensagem (para todos)',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -327,7 +520,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Mensagem deletada com sucesso', content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string', example: 'success' }, number: { type: 'string' }, messageId: { type: 'string' } } } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -338,6 +532,7 @@ const swaggerDocument = {
         tags: ['Mensagens'],
         summary: 'Editar mensagem',
         description: 'Edita o texto de uma mensagem enviada anteriormente.',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -356,7 +551,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Mensagem editada com sucesso', content: { 'application/json': { schema: { $ref: '#/components/schemas/MessageSuccess' } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -369,6 +565,7 @@ const swaggerDocument = {
         tags: ['Contatos'],
         summary: 'Verificar se número existe no WhatsApp',
         parameters: [
+          { $ref: '#/components/parameters/XSessionId' },
           { name: 'number', in: 'path', required: true, schema: { type: 'string' }, description: 'Número com código do país + DDD', example: '5511999999999' }
         ],
         responses: {
@@ -388,6 +585,8 @@ const swaggerDocument = {
               }
             }
           },
+          400: { description: 'X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -398,6 +597,7 @@ const swaggerDocument = {
         tags: ['Contatos'],
         summary: 'Buscar foto de perfil',
         parameters: [
+          { $ref: '#/components/parameters/XSessionId' },
           { name: 'number', in: 'path', required: true, schema: { type: 'string' }, description: 'Número do contato', example: '5511999999999' },
           { name: 'highRes', in: 'query', required: false, schema: { type: 'string', enum: ['true', 'false'] }, description: 'Retornar em alta resolução' }
         ],
@@ -417,6 +617,8 @@ const swaggerDocument = {
               }
             }
           },
+          400: { description: 'X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -427,6 +629,7 @@ const swaggerDocument = {
         tags: ['Contatos'],
         summary: 'Buscar status (recado) do contato',
         parameters: [
+          { $ref: '#/components/parameters/XSessionId' },
           { name: 'number', in: 'path', required: true, schema: { type: 'string' }, description: 'Número do contato', example: '5511999999999' }
         ],
         responses: {
@@ -445,6 +648,8 @@ const swaggerDocument = {
               }
             }
           },
+          400: { description: 'X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -456,6 +661,7 @@ const swaggerDocument = {
         summary: 'Buscar perfil comercial',
         description: 'Retorna informações do perfil comercial como descrição e categoria.',
         parameters: [
+          { $ref: '#/components/parameters/XSessionId' },
           { name: 'number', in: 'path', required: true, schema: { type: 'string' }, description: 'Número do contato', example: '5511999999999' }
         ],
         responses: {
@@ -474,6 +680,8 @@ const swaggerDocument = {
               }
             }
           },
+          400: { description: 'X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -483,6 +691,7 @@ const swaggerDocument = {
       post: {
         tags: ['Contatos'],
         summary: 'Bloquear usuário',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -499,7 +708,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Usuário bloqueado', content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string', example: 'success' }, number: { type: 'string' }, action: { type: 'string', example: 'blocked' } } } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -509,6 +719,7 @@ const swaggerDocument = {
       post: {
         tags: ['Contatos'],
         summary: 'Desbloquear usuário',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -525,7 +736,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Usuário desbloqueado', content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string', example: 'success' }, number: { type: 'string' }, action: { type: 'string', example: 'unblocked' } } } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -535,6 +747,7 @@ const swaggerDocument = {
       get: {
         tags: ['Contatos'],
         summary: 'Listar usuários bloqueados',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         responses: {
           200: {
             description: 'Lista retornada',
@@ -550,6 +763,8 @@ const swaggerDocument = {
               }
             }
           },
+          400: { description: 'X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -561,6 +776,7 @@ const swaggerDocument = {
       put: {
         tags: ['Perfil'],
         summary: 'Atualizar nome do perfil',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -577,7 +793,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Nome atualizado', content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string', example: 'success' }, name: { type: 'string' } } } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -587,6 +804,7 @@ const swaggerDocument = {
       put: {
         tags: ['Perfil'],
         summary: 'Atualizar status (recado) do perfil',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -603,7 +821,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Status atualizado', content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string', example: 'success' }, text: { type: 'string' } } } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -615,6 +834,7 @@ const swaggerDocument = {
       get: {
         tags: ['Grupos'],
         summary: 'Listar todos os grupos',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         responses: {
           200: {
             description: 'Grupos listados',
@@ -642,6 +862,8 @@ const swaggerDocument = {
               }
             }
           },
+          400: { description: 'X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -651,6 +873,7 @@ const swaggerDocument = {
       post: {
         tags: ['Grupos'],
         summary: 'Criar grupo',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -668,7 +891,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Grupo criado', content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string', example: 'success' }, group: { type: 'object' } } } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -680,10 +904,13 @@ const swaggerDocument = {
         summary: 'Obter metadados do grupo',
         description: 'Retorna participantes, nome, descrição e outras informações do grupo.',
         parameters: [
+          { $ref: '#/components/parameters/XSessionId' },
           { name: 'groupId', in: 'path', required: true, schema: { type: 'string' }, description: 'ID do grupo (com ou sem @g.us)', example: '120363040469999999@g.us' }
         ],
         responses: {
           200: { description: 'Metadados retornados', content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string', example: 'success' }, metadata: { type: 'object' } } } } } },
+          400: { description: 'X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -694,6 +921,7 @@ const swaggerDocument = {
         tags: ['Grupos'],
         summary: 'Obter código de convite do grupo',
         parameters: [
+          { $ref: '#/components/parameters/XSessionId' },
           { name: 'groupId', in: 'path', required: true, schema: { type: 'string' }, description: 'ID do grupo', example: '120363040469999999@g.us' }
         ],
         responses: {
@@ -713,6 +941,8 @@ const swaggerDocument = {
               }
             }
           },
+          400: { description: 'X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -724,6 +954,7 @@ const swaggerDocument = {
         summary: 'Revogar código de convite',
         description: 'Revoga o código de convite atual e gera um novo.',
         parameters: [
+          { $ref: '#/components/parameters/XSessionId' },
           { name: 'groupId', in: 'path', required: true, schema: { type: 'string' }, description: 'ID do grupo', example: '120363040469999999@g.us' }
         ],
         responses: {
@@ -743,6 +974,8 @@ const swaggerDocument = {
               }
             }
           },
+          400: { description: 'X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -752,6 +985,7 @@ const swaggerDocument = {
       post: {
         tags: ['Grupos'],
         summary: 'Entrar em grupo pelo código de convite',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -768,7 +1002,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Entrou no grupo', content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string', example: 'success' }, groupId: { type: 'string' } } } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -779,10 +1014,13 @@ const swaggerDocument = {
         tags: ['Grupos'],
         summary: 'Obter info do grupo pelo código de convite',
         parameters: [
+          { $ref: '#/components/parameters/XSessionId' },
           { name: 'inviteCode', in: 'path', required: true, schema: { type: 'string' }, description: 'Código de convite', example: 'AbCdEfGhIjK' }
         ],
         responses: {
           200: { description: 'Info retornada', content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string', example: 'success' }, groupInfo: { type: 'object' } } } } } },
+          400: { description: 'X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -793,6 +1031,7 @@ const swaggerDocument = {
         tags: ['Grupos'],
         summary: 'Adicionar/Remover/Promover/Rebaixar participantes',
         parameters: [
+          { $ref: '#/components/parameters/XSessionId' },
           { name: 'groupId', in: 'path', required: true, schema: { type: 'string' }, description: 'ID do grupo', example: '120363040469999999@g.us' }
         ],
         requestBody: {
@@ -812,7 +1051,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Participantes atualizados', content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string', example: 'success' }, groupId: { type: 'string' }, action: { type: 'string' }, result: { type: 'object' } } } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -823,6 +1063,7 @@ const swaggerDocument = {
         tags: ['Grupos'],
         summary: 'Atualizar nome do grupo',
         parameters: [
+          { $ref: '#/components/parameters/XSessionId' },
           { name: 'groupId', in: 'path', required: true, schema: { type: 'string' }, description: 'ID do grupo', example: '120363040469999999@g.us' }
         ],
         requestBody: {
@@ -841,7 +1082,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Nome atualizado', content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string', example: 'success' }, groupId: { type: 'string' }, subject: { type: 'string' } } } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -852,6 +1094,7 @@ const swaggerDocument = {
         tags: ['Grupos'],
         summary: 'Atualizar descrição do grupo',
         parameters: [
+          { $ref: '#/components/parameters/XSessionId' },
           { name: 'groupId', in: 'path', required: true, schema: { type: 'string' }, description: 'ID do grupo', example: '120363040469999999@g.us' }
         ],
         requestBody: {
@@ -870,7 +1113,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Descrição atualizada', content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string', example: 'success' }, groupId: { type: 'string' }, description: { type: 'string' } } } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -882,6 +1126,7 @@ const swaggerDocument = {
         summary: 'Alterar configurações do grupo',
         description: '`announcement` = somente admins enviam mensagens. `not_announcement` = todos enviam. `locked` = somente admins editam info. `unlocked` = todos editam.',
         parameters: [
+          { $ref: '#/components/parameters/XSessionId' },
           { name: 'groupId', in: 'path', required: true, schema: { type: 'string' }, description: 'ID do grupo', example: '120363040469999999@g.us' }
         ],
         requestBody: {
@@ -900,7 +1145,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Configuração atualizada', content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string', example: 'success' }, groupId: { type: 'string' }, setting: { type: 'string' } } } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -911,10 +1157,13 @@ const swaggerDocument = {
         tags: ['Grupos'],
         summary: 'Sair do grupo',
         parameters: [
+          { $ref: '#/components/parameters/XSessionId' },
           { name: 'groupId', in: 'path', required: true, schema: { type: 'string' }, description: 'ID do grupo', example: '120363040469999999@g.us' }
         ],
         responses: {
           200: { description: 'Saiu do grupo', content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string', example: 'success' }, groupId: { type: 'string' }, action: { type: 'string', example: 'left' } } } } } },
+          400: { description: 'X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -925,6 +1174,7 @@ const swaggerDocument = {
         tags: ['Grupos'],
         summary: 'Buscar foto de perfil do grupo',
         parameters: [
+          { $ref: '#/components/parameters/XSessionId' },
           { name: 'groupId', in: 'path', required: true, schema: { type: 'string' }, description: 'ID do grupo', example: '120363040469999999@g.us' },
           { name: 'highRes', in: 'query', required: false, schema: { type: 'string', enum: ['true', 'false'] }, description: 'Alta resolução' }
         ],
@@ -944,6 +1194,8 @@ const swaggerDocument = {
               }
             }
           },
+          400: { description: 'X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -956,6 +1208,7 @@ const swaggerDocument = {
         tags: ['Chat'],
         summary: 'Atualizar presença',
         description: 'Define o status de presença (digitando, gravando, online, etc.). Para `composing`, `recording` e `paused`, o campo `number` é obrigatório.',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -973,7 +1226,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Presença atualizada', content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string', example: 'success' }, presence: { type: 'string' }, number: { type: 'string', nullable: true } } } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -983,6 +1237,7 @@ const swaggerDocument = {
       post: {
         tags: ['Chat'],
         summary: 'Marcar mensagens como lidas',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -1011,7 +1266,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Mensagens marcadas como lidas', content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string', example: 'success' }, readCount: { type: 'integer', example: 2 } } } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -1021,6 +1277,7 @@ const swaggerDocument = {
       post: {
         tags: ['Chat'],
         summary: 'Arquivar/Desarquivar chat',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -1040,7 +1297,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Chat arquivado/desarquivado', content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string', example: 'success' }, number: { type: 'string' }, archived: { type: 'boolean' } } } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -1050,6 +1308,7 @@ const swaggerDocument = {
       post: {
         tags: ['Chat'],
         summary: 'Mutar/Desmutar chat',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -1068,7 +1327,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Chat mutado/desmutado', content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string', example: 'success' }, number: { type: 'string' }, muted: { type: 'boolean' } } } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -1078,6 +1338,7 @@ const swaggerDocument = {
       post: {
         tags: ['Chat'],
         summary: 'Fixar/Desfixar chat',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -1095,7 +1356,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Chat fixado/desfixado', content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string', example: 'success' }, number: { type: 'string' }, pinned: { type: 'boolean' } } } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -1105,6 +1367,7 @@ const swaggerDocument = {
       post: {
         tags: ['Chat'],
         summary: 'Rejeitar chamada',
+        parameters: [{ $ref: '#/components/parameters/XSessionId' }],
         requestBody: {
           required: true,
           content: {
@@ -1122,7 +1385,8 @@ const swaggerDocument = {
         },
         responses: {
           200: { description: 'Chamada rejeitada', content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string', example: 'success' }, callId: { type: 'string' }, callFrom: { type: 'string' } } } } } },
-          400: { description: 'Parâmetros inválidos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          400: { description: 'Parâmetros inválidos ou X-Session-Id ausente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error400' } } } },
+          404: { description: 'Sessão não encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error404Session' } } } },
           500: { description: 'Erro interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error500' } } } },
           503: { description: 'WhatsApp desconectado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error503' } } } }
         }
@@ -1130,6 +1394,22 @@ const swaggerDocument = {
     }
   },
   components: {
+    parameters: {
+      XSessionId: {
+        name: 'X-Session-Id',
+        in: 'header',
+        required: true,
+        description: 'Identificador da sessão WhatsApp a ser utilizada',
+        schema: { type: 'string', example: 'pedro' }
+      },
+      SessionIdPath: {
+        name: 'sessionId',
+        in: 'path',
+        required: true,
+        description: 'Identificador da sessão WhatsApp',
+        schema: { type: 'string', example: 'pedro' }
+      }
+    },
     schemas: {
       MessageSuccess: {
         type: 'object',
@@ -1142,7 +1422,16 @@ const swaggerDocument = {
       Error400: {
         type: 'object',
         properties: {
-          error: { type: 'string', example: 'Parâmetros obrigatórios não fornecidos' }
+          status: { type: 'string', example: 'error' },
+          error: { type: 'string', example: 'Header X-Session-Id é obrigatório' }
+        }
+      },
+      Error404Session: {
+        type: 'object',
+        properties: {
+          status: { type: 'string', example: 'error' },
+          error: { type: 'string', example: 'Sessão "xxx" não encontrada. Crie via POST /api/sessions' },
+          sessionId: { type: 'string', example: 'xxx' }
         }
       },
       Error500: {
@@ -1157,6 +1446,7 @@ const swaggerDocument = {
         properties: {
           status: { type: 'string', example: 'error' },
           error: { type: 'string', example: 'WhatsApp não está conectado' },
+          sessionId: { type: 'string', example: 'pedro' },
           connectionStatus: { type: 'string', example: 'disconnected' }
         }
       }

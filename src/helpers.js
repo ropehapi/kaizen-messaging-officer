@@ -1,4 +1,4 @@
-import { getSock, getConnectionStatus } from './socket.js'
+import { getSession } from './socket.js'
 
 /**
  * Formata um número de telefone para o JID do WhatsApp.
@@ -21,26 +21,52 @@ export function formatGroupJid(groupId) {
 }
 
 /**
- * Middleware que verifica se o socket está conectado antes de processar a requisição.
+ * Middleware que resolve a sessão via header X-Session-Id
+ * e verifica se o socket está conectado antes de processar a requisição.
+ *
+ * - Lê o header X-Session-Id
+ * - Busca a sessão no SessionManager
+ * - Verifica se está conectada
+ * - Injeta req.sock e req.sessionId
  */
 export function requireConnection(req, res, next) {
-  const status = getConnectionStatus()
-  if (status !== 'connected') {
+  const sessionId = req.headers['x-session-id']
+
+  if (!sessionId) {
+    return res.status(400).json({
+      status: 'error',
+      error: 'Header X-Session-Id é obrigatório'
+    })
+  }
+
+  const session = getSession(sessionId)
+
+  if (!session) {
+    return res.status(404).json({
+      status: 'error',
+      error: `Sessão "${sessionId}" não encontrada. Crie via POST /api/sessions`,
+      sessionId
+    })
+  }
+
+  if (session.status !== 'connected') {
     return res.status(503).json({
       status: 'error',
       error: 'WhatsApp não está conectado',
-      connectionStatus: status
+      sessionId,
+      connectionStatus: session.status
     })
   }
 
-  const sock = getSock()
-  if (!sock) {
+  if (!session.sock) {
     return res.status(503).json({
       status: 'error',
-      error: 'Socket não inicializado'
+      error: 'Socket não inicializado',
+      sessionId
     })
   }
 
-  req.sock = sock
+  req.sock = session.sock
+  req.sessionId = sessionId
   next()
 }

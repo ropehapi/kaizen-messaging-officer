@@ -1,0 +1,1711 @@
+{
+  "info": {
+    "name": "Messaging Officer - WhatsApp API v2",
+    "description": "API REST para interagir com o WhatsApp via Baileys com suporte a **múltiplas sessões**.\n\nTodas as rotas operacionais (mensagens, contatos, grupos, chat) exigem o header `X-Session-Id` para identificar qual sessão WhatsApp utilizar.\n\n**Fluxo básico:**\n1. Crie uma sessão via `POST /api/sessions`\n2. Escaneie o QR code em `/api/sessions/{sessionId}/qr`\n3. Use os endpoints passando o header `X-Session-Id`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "sessionId",
+      "value": "pedro",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Sessões",
+      "description": "Gerenciamento de sessões WhatsApp (criar, listar, QR, deletar, reiniciar)",
+      "item": [
+        {
+          "name": "Criar nova sessão",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sessions"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionId\": \"pedro\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todas as sessões",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sessions"
+              ],
+              "variable": [],
+              "query": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Status de uma sessão",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/:sessionId/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sessions",
+                ":sessionId",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "sessionId",
+                  "value": "pedro",
+                  "description": "Identificador da sessão WhatsApp"
+                }
+              ],
+              "query": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Página HTML do QR code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/:sessionId/qr",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sessions",
+                ":sessionId",
+                "qr"
+              ],
+              "variable": [
+                {
+                  "key": "sessionId",
+                  "value": "pedro",
+                  "description": "Identificador da sessão WhatsApp"
+                }
+              ],
+              "query": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reiniciar sessão",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/:sessionId/restart",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sessions",
+                ":sessionId",
+                "restart"
+              ],
+              "variable": [
+                {
+                  "key": "sessionId",
+                  "value": "pedro",
+                  "description": "Identificador da sessão WhatsApp"
+                }
+              ],
+              "query": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deletar sessão",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/:sessionId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sessions",
+                ":sessionId"
+              ],
+              "variable": [
+                {
+                  "key": "sessionId",
+                  "value": "pedro",
+                  "description": "Identificador da sessão WhatsApp"
+                }
+              ],
+              "query": []
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Mensagens",
+      "description": "Envio e gerenciamento de mensagens (requer X-Session-Id)",
+      "item": [
+        {
+          "name": "Enviar mensagem de texto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/send-message",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "send-message"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"5511999999999\",\n  \"message\": \"Olá! Esta é uma mensagem de teste.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Enviar imagem",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/send-image",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "send-image"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"5511999999999\",\n  \"imageUrl\": \"https://example.com/image.jpg\",\n  \"caption\": \"Veja esta foto!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Enviar vídeo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/send-video",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "send-video"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"5511999999999\",\n  \"videoUrl\": \"https://example.com/video.mp4\",\n  \"caption\": \"Assista este vídeo!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Enviar áudio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/send-audio",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "send-audio"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"5511999999999\",\n  \"audioUrl\": \"https://example.com/audio.mp3\",\n  \"ptt\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Enviar documento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/send-document",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "send-document"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"5511999999999\",\n  \"documentUrl\": \"https://example.com/file.pdf\",\n  \"mimetype\": \"application/pdf\",\n  \"fileName\": \"relatorio.pdf\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Enviar localização",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/send-location",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "send-location"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"5511999999999\",\n  \"latitude\": -23.5505,\n  \"longitude\": -46.6333\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Enviar contato (vCard)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/send-contact",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "send-contact"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"5511999999999\",\n  \"contactName\": \"João Silva\",\n  \"contactNumber\": \"5511988888888\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Enviar reação a uma mensagem",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/send-reaction",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "send-reaction"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"5511999999999\",\n  \"messageId\": \"ABCDEF1234567890\",\n  \"reaction\": \"👍\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Enviar enquete (poll)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/send-poll",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "send-poll"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"5511999999999\",\n  \"name\": \"Qual sua linguagem favorita?\",\n  \"options\": [\n    \"JavaScript\",\n    \"Python\",\n    \"Go\",\n    \"Rust\"\n  ],\n  \"selectableCount\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deletar mensagem (para todos)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/delete-message",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "delete-message"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"5511999999999\",\n  \"messageId\": \"ABCDEF1234567890\",\n  \"fromMe\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editar mensagem",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/edit-message",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "edit-message"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"5511999999999\",\n  \"messageId\": \"ABCDEF1234567890\",\n  \"newMessage\": \"Mensagem corrigida!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Contatos",
+      "description": "Consultas e operações com contatos/usuários (requer X-Session-Id)",
+      "item": [
+        {
+          "name": "Verificar se número existe no WhatsApp",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/check-number/:number",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "check-number",
+                ":number"
+              ],
+              "variable": [
+                {
+                  "key": "number",
+                  "value": "",
+                  "description": "Número com código do país + DDD"
+                }
+              ],
+              "query": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar foto de perfil",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/profile-picture/:number?highRes=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "profile-picture",
+                ":number"
+              ],
+              "variable": [
+                {
+                  "key": "number",
+                  "value": "",
+                  "description": "Número do contato"
+                }
+              ],
+              "query": [
+                {
+                  "key": "highRes",
+                  "value": "",
+                  "description": "Retornar em alta resolução",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar status (recado) do contato",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/status/:number",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "status",
+                ":number"
+              ],
+              "variable": [
+                {
+                  "key": "number",
+                  "value": "",
+                  "description": "Número do contato"
+                }
+              ],
+              "query": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar perfil comercial",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/business-profile/:number",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "business-profile",
+                ":number"
+              ],
+              "variable": [
+                {
+                  "key": "number",
+                  "value": "",
+                  "description": "Número do contato"
+                }
+              ],
+              "query": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Bloquear usuário",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/block",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "block"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"5511999999999\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Desbloquear usuário",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/unblock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "unblock"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"5511999999999\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar usuários bloqueados",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/blocklist",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "blocklist"
+              ],
+              "variable": [],
+              "query": []
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Perfil",
+      "description": "Gerenciamento do perfil próprio (requer X-Session-Id)",
+      "item": [
+        {
+          "name": "Atualizar nome do perfil",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/profile-name",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "profile-name"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meu Nome\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar status (recado) do perfil",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/profile-status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "profile-status"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Disponível para contato!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Grupos",
+      "description": "Operações com grupos do WhatsApp (requer X-Session-Id)",
+      "item": [
+        {
+          "name": "Listar todos os grupos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/groups",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "groups"
+              ],
+              "variable": [],
+              "query": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Criar grupo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/groups/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "groups",
+                "create"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Novo Grupo\",\n  \"participants\": [\n    \"5511999999999\",\n    \"5511888888888\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obter metadados do grupo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/groups/:groupId/metadata",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "groups",
+                ":groupId",
+                "metadata"
+              ],
+              "variable": [
+                {
+                  "key": "groupId",
+                  "value": "",
+                  "description": "ID do grupo (com ou sem @g.us)"
+                }
+              ],
+              "query": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obter código de convite do grupo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/groups/:groupId/invite-code",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "groups",
+                ":groupId",
+                "invite-code"
+              ],
+              "variable": [
+                {
+                  "key": "groupId",
+                  "value": "",
+                  "description": "ID do grupo"
+                }
+              ],
+              "query": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Revogar código de convite",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/groups/:groupId/revoke-invite",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "groups",
+                ":groupId",
+                "revoke-invite"
+              ],
+              "variable": [
+                {
+                  "key": "groupId",
+                  "value": "",
+                  "description": "ID do grupo"
+                }
+              ],
+              "query": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Entrar em grupo pelo código de convite",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/groups/join",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "groups",
+                "join"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"inviteCode\": \"AbCdEfGhIjK\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obter info do grupo pelo código de convite",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/groups/invite-info/:inviteCode",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "groups",
+                "invite-info",
+                ":inviteCode"
+              ],
+              "variable": [
+                {
+                  "key": "inviteCode",
+                  "value": "",
+                  "description": "Código de convite"
+                }
+              ],
+              "query": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Adicionar/Remover/Promover/Rebaixar participantes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/groups/:groupId/participants",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "groups",
+                ":groupId",
+                "participants"
+              ],
+              "variable": [
+                {
+                  "key": "groupId",
+                  "value": "",
+                  "description": "ID do grupo"
+                }
+              ],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"participants\": [\n    \"5511999999999\"\n  ],\n  \"action\": \"add\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar nome do grupo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/groups/:groupId/subject",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "groups",
+                ":groupId",
+                "subject"
+              ],
+              "variable": [
+                {
+                  "key": "groupId",
+                  "value": "",
+                  "description": "ID do grupo"
+                }
+              ],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"Novo Nome do Grupo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar descrição do grupo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/groups/:groupId/description",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "groups",
+                ":groupId",
+                "description"
+              ],
+              "variable": [
+                {
+                  "key": "groupId",
+                  "value": "",
+                  "description": "ID do grupo"
+                }
+              ],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Descrição atualizada do grupo.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Alterar configurações do grupo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/groups/:groupId/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "groups",
+                ":groupId",
+                "settings"
+              ],
+              "variable": [
+                {
+                  "key": "groupId",
+                  "value": "",
+                  "description": "ID do grupo"
+                }
+              ],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"setting\": \"announcement\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sair do grupo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/groups/:groupId/leave",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "groups",
+                ":groupId",
+                "leave"
+              ],
+              "variable": [
+                {
+                  "key": "groupId",
+                  "value": "",
+                  "description": "ID do grupo"
+                }
+              ],
+              "query": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar foto de perfil do grupo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/groups/:groupId/profile-picture?highRes=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "groups",
+                ":groupId",
+                "profile-picture"
+              ],
+              "variable": [
+                {
+                  "key": "groupId",
+                  "value": "",
+                  "description": "ID do grupo"
+                }
+              ],
+              "query": [
+                {
+                  "key": "highRes",
+                  "value": "",
+                  "description": "Alta resolução",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "description": "Operações de chat — presença, leitura, arquivar, etc. (requer X-Session-Id)",
+      "item": [
+        {
+          "name": "Atualizar presença",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/presence",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "presence"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"5511999999999\",\n  \"presence\": \"composing\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Marcar mensagens como lidas",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/read-messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "read-messages"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"keys\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Arquivar/Desarquivar chat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/archive",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "archive"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"5511999999999\",\n  \"archive\": true,\n  \"lastMessageKey\": {},\n  \"lastMessageTimestamp\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mutar/Desmutar chat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/mute",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mute"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"5511999999999\",\n  \"mute\": true,\n  \"duration\": 8\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Fixar/Desfixar chat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pin",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pin"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"5511999999999\",\n  \"pin\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rejeitar chamada",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}",
+                "description": "Identificador da sessão WhatsApp a ser utilizada"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reject-call",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reject-call"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"callId\": \"CALL_ID_123\",\n  \"callFrom\": \"5511999999999@s.whatsapp.net\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
