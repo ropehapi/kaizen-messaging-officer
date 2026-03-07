@@ -91,7 +91,7 @@ docker compose version
 | docker-compose.yml | Compatível | Compatível |
 | Requer root | Sim (daemon roda como root) | Não (rootless por padrão) |
 
-> Nos passos seguintes, os comandos serão exibidos com `docker`. Se escolheu Podman, substitua `docker` por `podman` e `docker compose` por `podman-compose`.
+> Nos passos seguintes, os comandos serão exibidos com `docker`. Se escolheu Podman, substitua `docker` por `podman` e `docker compose` por `podman-compose` (com hífen).
 
 ---
 
@@ -221,6 +221,22 @@ cd ~/apps/kaizen-secretary
 podman-compose up -d --build
 ```
 
+### Limpar imagens antigas
+
+Após cada build, imagens antigas ficam em disco. Limpe-as com:
+
+**Docker:**
+
+```bash
+docker image prune -f
+```
+
+**Podman:**
+
+```bash
+podman image prune -f
+```
+
 ### Verificar
 
 **Docker:**
@@ -285,7 +301,7 @@ curl -X POST http://<IP-EXTERNO>:3000/api/sessions \
 
 ## Comandos úteis
 
-> Substitua `docker` por `podman` e `docker compose` por `podman-compose` se estiver usando Podman.
+> Substitua `docker` por `podman` e `docker compose` por `podman-compose` (com hífen) se estiver usando Podman.
 
 ### Monitoramento
 
@@ -328,6 +344,8 @@ docker compose up -d --build
 cd ~/apps/kaizen-secretary
 git pull
 docker compose up -d --build
+
+docker image prune -f
 ```
 
 ---
