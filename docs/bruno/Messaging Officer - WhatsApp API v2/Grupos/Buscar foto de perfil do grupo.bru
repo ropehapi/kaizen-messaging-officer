@@ -1,0 +1,27 @@
+meta {
+  name: Buscar foto de perfil do grupo
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/api/groups/:groupId/profile-picture?highRes=
+  body: none
+  auth: inherit
+}
+
+params:query {
+  ~highRes: 
+}
+
+params:path {
+  groupId: 
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+}
+
+settings {
+  encodeUrl: true
+}

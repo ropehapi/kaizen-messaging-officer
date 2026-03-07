@@ -1,0 +1,26 @@
+meta {
+  name: Desbloquear usuário
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/unblock
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "number": "5511999999999"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

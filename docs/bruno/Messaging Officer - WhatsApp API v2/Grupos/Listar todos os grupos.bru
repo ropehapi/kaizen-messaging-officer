@@ -1,0 +1,19 @@
+meta {
+  name: Listar todos os grupos
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/groups
+  body: none
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+}
+
+settings {
+  encodeUrl: true
+}

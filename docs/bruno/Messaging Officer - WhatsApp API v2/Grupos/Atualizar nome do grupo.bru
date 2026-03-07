@@ -1,0 +1,30 @@
+meta {
+  name: Atualizar nome do grupo
+  type: http
+  seq: 9
+}
+
+put {
+  url: {{baseUrl}}/api/groups/:groupId/subject
+  body: json
+  auth: inherit
+}
+
+params:path {
+  groupId: 
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "subject": "Novo Nome do Grupo"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,27 @@
+meta {
+  name: Fixar/Desfixar chat
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/pin
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "number": "5511999999999",
+    "pin": true
+  }
+}
+
+settings {
+  encodeUrl: true
+}

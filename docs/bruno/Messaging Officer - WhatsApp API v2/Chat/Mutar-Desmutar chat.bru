@@ -1,0 +1,28 @@
+meta {
+  name: Mutar/Desmutar chat
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/mute
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "number": "5511999999999",
+    "mute": true,
+    "duration": 8
+  }
+}
+
+settings {
+  encodeUrl: true
+}

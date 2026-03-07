@@ -1,0 +1,28 @@
+meta {
+  name: Enviar localização
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/send-location
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "number": "5511999999999",
+    "latitude": -23.5505,
+    "longitude": -46.6333
+  }
+}
+
+settings {
+  encodeUrl: true
+}

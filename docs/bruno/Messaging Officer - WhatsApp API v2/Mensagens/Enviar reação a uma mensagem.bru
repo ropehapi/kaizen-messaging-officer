@@ -1,0 +1,28 @@
+meta {
+  name: Enviar reação a uma mensagem
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/send-reaction
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "number": "5511999999999",
+    "messageId": "ABCDEF1234567890",
+    "reaction": "👍"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

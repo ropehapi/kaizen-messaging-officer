@@ -1,0 +1,23 @@
+meta {
+  name: Sair do grupo
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/api/groups/:groupId/leave
+  body: none
+  auth: inherit
+}
+
+params:path {
+  groupId: 
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+}
+
+settings {
+  encodeUrl: true
+}

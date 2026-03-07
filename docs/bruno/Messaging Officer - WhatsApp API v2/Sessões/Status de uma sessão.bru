@@ -1,0 +1,19 @@
+meta {
+  name: Status de uma sessão
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/sessions/:sessionId/status
+  body: none
+  auth: inherit
+}
+
+params:path {
+  sessionId: pedro
+}
+
+settings {
+  encodeUrl: true
+}

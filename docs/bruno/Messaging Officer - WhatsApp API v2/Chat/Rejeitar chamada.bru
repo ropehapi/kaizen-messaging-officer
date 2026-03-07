@@ -1,0 +1,27 @@
+meta {
+  name: Rejeitar chamada
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/reject-call
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "callId": "CALL_ID_123",
+    "callFrom": "5511999999999@s.whatsapp.net"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

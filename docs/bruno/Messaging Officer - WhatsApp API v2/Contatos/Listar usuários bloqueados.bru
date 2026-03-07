@@ -1,0 +1,19 @@
+meta {
+  name: Listar usuários bloqueados
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/blocklist
+  body: none
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+}
+
+settings {
+  encodeUrl: true
+}

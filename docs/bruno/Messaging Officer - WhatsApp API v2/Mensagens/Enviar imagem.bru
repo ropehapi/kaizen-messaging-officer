@@ -1,0 +1,28 @@
+meta {
+  name: Enviar imagem
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/send-image
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "number": "5511999999999",
+    "imageUrl": "https://example.com/image.jpg",
+    "caption": "Veja esta foto!"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

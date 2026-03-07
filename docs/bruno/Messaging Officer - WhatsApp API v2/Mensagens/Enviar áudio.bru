@@ -1,0 +1,28 @@
+meta {
+  name: Enviar áudio
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/send-audio
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "number": "5511999999999",
+    "audioUrl": "https://example.com/audio.mp3",
+    "ptt": true
+  }
+}
+
+settings {
+  encodeUrl: true
+}

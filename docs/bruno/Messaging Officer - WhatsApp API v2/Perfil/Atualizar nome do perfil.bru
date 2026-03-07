@@ -1,0 +1,26 @@
+meta {
+  name: Atualizar nome do perfil
+  type: http
+  seq: 1
+}
+
+put {
+  url: {{baseUrl}}/api/profile-name
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Meu Nome"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

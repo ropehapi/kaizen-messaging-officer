@@ -1,0 +1,30 @@
+meta {
+  name: Criar grupo
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/groups/create
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Novo Grupo",
+    "participants": [
+      "5511999999999",
+      "5511888888888"
+    ]
+  }
+}
+
+settings {
+  encodeUrl: true
+}

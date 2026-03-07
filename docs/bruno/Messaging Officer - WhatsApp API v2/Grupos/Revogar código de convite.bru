@@ -1,0 +1,23 @@
+meta {
+  name: Revogar código de convite
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/groups/:groupId/revoke-invite
+  body: none
+  auth: inherit
+}
+
+params:path {
+  groupId: 
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+}
+
+settings {
+  encodeUrl: true
+}

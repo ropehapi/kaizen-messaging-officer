@@ -1,0 +1,28 @@
+meta {
+  name: Enviar vídeo
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/send-video
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "number": "5511999999999",
+    "videoUrl": "https://example.com/video.mp4",
+    "caption": "Assista este vídeo!"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

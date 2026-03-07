@@ -1,0 +1,26 @@
+meta {
+  name: Bloquear usuário
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/block
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "number": "5511999999999"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

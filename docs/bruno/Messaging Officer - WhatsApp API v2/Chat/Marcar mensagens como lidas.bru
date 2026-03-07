@@ -1,0 +1,26 @@
+meta {
+  name: Marcar mensagens como lidas
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/read-messages
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "keys": []
+  }
+}
+
+settings {
+  encodeUrl: true
+}

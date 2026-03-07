@@ -1,0 +1,23 @@
+meta {
+  name: Obter metadados do grupo
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/groups/:groupId/metadata
+  body: none
+  auth: inherit
+}
+
+params:path {
+  groupId: 
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+}
+
+settings {
+  encodeUrl: true
+}

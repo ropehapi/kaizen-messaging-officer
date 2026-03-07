@@ -1,0 +1,23 @@
+meta {
+  name: Obter info do grupo pelo código de convite
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/groups/invite-info/:inviteCode
+  body: none
+  auth: inherit
+}
+
+params:path {
+  inviteCode: 
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+}
+
+settings {
+  encodeUrl: true
+}

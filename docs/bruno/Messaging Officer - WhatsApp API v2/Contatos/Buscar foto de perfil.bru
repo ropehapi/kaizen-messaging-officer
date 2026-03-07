@@ -1,0 +1,27 @@
+meta {
+  name: Buscar foto de perfil
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/profile-picture/:number?highRes=
+  body: none
+  auth: inherit
+}
+
+params:query {
+  ~highRes: 
+}
+
+params:path {
+  number: 
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+}
+
+settings {
+  encodeUrl: true
+}

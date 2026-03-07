@@ -1,0 +1,18 @@
+meta {
+  name: Messaging Officer - WhatsApp API v2
+}
+
+auth {
+  mode: none
+}
+
+docs {
+  API REST para interagir com o WhatsApp via Baileys com suporte a **múltiplas sessões**.
+  
+  Todas as rotas operacionais (mensagens, contatos, grupos, chat) exigem o header `X-Session-Id` para identificar qual sessão WhatsApp utilizar.
+  
+  **Fluxo básico:**
+  1. Crie uma sessão via `POST /api/sessions`
+  2. Escaneie o QR code em `/api/sessions/{sessionId}/qr`
+  3. Use os endpoints passando o header `X-Session-Id`
+}

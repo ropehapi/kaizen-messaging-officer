@@ -1,0 +1,29 @@
+meta {
+  name: Arquivar/Desarquivar chat
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/archive
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "number": "5511999999999",
+    "archive": true,
+    "lastMessageKey": {},
+    "lastMessageTimestamp": 0
+  }
+}
+
+settings {
+  encodeUrl: true
+}

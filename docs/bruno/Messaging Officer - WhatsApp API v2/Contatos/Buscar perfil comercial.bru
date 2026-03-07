@@ -1,0 +1,23 @@
+meta {
+  name: Buscar perfil comercial
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/business-profile/:number
+  body: none
+  auth: inherit
+}
+
+params:path {
+  number: 
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+}
+
+settings {
+  encodeUrl: true
+}

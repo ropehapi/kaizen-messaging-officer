@@ -1,0 +1,23 @@
+meta {
+  name: Verificar se número existe no WhatsApp
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/check-number/:number
+  body: none
+  auth: inherit
+}
+
+params:path {
+  number: 
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+}
+
+settings {
+  encodeUrl: true
+}

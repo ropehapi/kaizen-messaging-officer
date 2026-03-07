@@ -1,0 +1,29 @@
+meta {
+  name: Enviar mensagem de texto
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/api/send-message
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{session-id}}
+  Content-Type: application/json
+  x-api-key: {{x-api-key}}
+}
+
+body:json {
+  {
+    "number": "5543936180709",
+    "message": "KKKKKKKK normal man, esses modelos com a pintura toda fudida geralmente são feitas por IA"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

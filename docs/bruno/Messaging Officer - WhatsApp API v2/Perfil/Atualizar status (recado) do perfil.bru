@@ -1,0 +1,26 @@
+meta {
+  name: Atualizar status (recado) do perfil
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/profile-status
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "text": "Disponível para contato!"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

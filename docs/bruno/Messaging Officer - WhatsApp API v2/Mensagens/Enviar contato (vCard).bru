@@ -1,0 +1,28 @@
+meta {
+  name: Enviar contato (vCard)
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/send-contact
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "number": "5511999999999",
+    "contactName": "João Silva",
+    "contactNumber": "5511988888888"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

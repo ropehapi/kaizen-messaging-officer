@@ -1,0 +1,28 @@
+meta {
+  name: Editar mensagem
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/api/edit-message
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "number": "5511999999999",
+    "messageId": "ABCDEF1234567890",
+    "newMessage": "Mensagem corrigida!"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

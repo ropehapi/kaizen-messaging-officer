@@ -1,0 +1,27 @@
+meta {
+  name: Atualizar presença
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/presence
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "number": "5511999999999",
+    "presence": "composing"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

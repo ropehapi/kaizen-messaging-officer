@@ -1,0 +1,33 @@
+meta {
+  name: Adicionar/Remover/Promover/Rebaixar participantes
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/groups/:groupId/participants
+  body: json
+  auth: inherit
+}
+
+params:path {
+  groupId: 
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "participants": [
+      "5511999999999"
+    ],
+    "action": "add"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

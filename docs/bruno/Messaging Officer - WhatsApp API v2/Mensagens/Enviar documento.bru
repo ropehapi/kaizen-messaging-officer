@@ -1,0 +1,29 @@
+meta {
+  name: Enviar documento
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/send-document
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "number": "5511999999999",
+    "documentUrl": "https://example.com/file.pdf",
+    "mimetype": "application/pdf",
+    "fileName": "relatorio.pdf"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

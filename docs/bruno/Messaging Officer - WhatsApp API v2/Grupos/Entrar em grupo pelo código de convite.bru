@@ -1,0 +1,26 @@
+meta {
+  name: Entrar em grupo pelo código de convite
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/groups/join
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Session-Id: {{sessionId}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "inviteCode": "AbCdEfGhIjK"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

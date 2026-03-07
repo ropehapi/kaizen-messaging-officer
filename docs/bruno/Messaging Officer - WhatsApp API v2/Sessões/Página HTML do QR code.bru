@@ -1,0 +1,19 @@
+meta {
+  name: Página HTML do QR code
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/sessions/:sessionId/qr
+  body: none
+  auth: inherit
+}
+
+params:path {
+  sessionId: pedro
+}
+
+settings {
+  encodeUrl: true
+}
