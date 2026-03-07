@@ -10,3 +10,9 @@ services:
       - ./auth:/app/auth
       - ./logs:/app/logs
     restart: unless-stopped
+    networks:
+      - manda-pra-mim
+
+networks:
+  manda-pra-mim:
+    external: true

@@ -1,0 +1,33 @@
+OFFICER_DIR = ~/apps/messaging-officer
+SECRETARY_DIR = ~/apps/kaizen-secretary
+
+.PHONY: up down restart update logs stats ps
+
+up:
+	cd $(OFFICER_DIR) && podman compose up -d
+	cd $(SECRETARY_DIR) && podman compose up -d
+
+down:
+	cd $(SECRETARY_DIR) && podman compose down
+	cd $(OFFICER_DIR) && podman compose down
+
+restart: down up
+
+update:
+	cd $(OFFICER_DIR) && git pull && podman compose up -d --build
+	cd $(SECRETARY_DIR) && git pull && podman compose up -d --build
+
+logs-officer:
+	cd $(OFFICER_DIR) && podman compose logs -f
+
+logs-secretary:
+	cd $(SECRETARY_DIR) && podman compose logs -f
+
+stats:
+	podman stats --no-stream
+
+ps:
+	podman ps
+
+network:
+	podman network create manda-pra-mim 2>/dev/null || true
